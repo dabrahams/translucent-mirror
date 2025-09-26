@@ -4,10 +4,11 @@ A SwiftUI application that creates a translucent mirror using your Mac's camera.
 
 ## Features
 
-- **Translucent Mirror**: Shows a horizontally flipped (mirrored) view from your camera with adjustable opacity
-- **Maximized Window**: Launches with a maximized window that fills your screen (but not fullscreen mode)
-- **Opacity Control**: Use the slider in the bottom-right corner to adjust the transparency level
-- **Background Visibility**: The translucent window allows you to see whatever is behind the application
+- **Always-On-Top Mirror**: Translucent mirrored camera view that stays on top of all windows
+- **Click-Through Interface**: All clicks and interactions pass through to applications below
+- **Menu Bar Control**: Discrete menu bar item (no dock icon) with opacity slider and toggle
+- **Full Screen Coverage**: Covers entire screen while remaining completely transparent to input
+- **Background App**: Runs as a background utility without cluttering your dock or app switcher
 
 ## Requirements
 
@@ -29,11 +30,14 @@ A SwiftUI application that creates a translucent mirror using your Mac's camera.
 
 ## Usage
 
-1. When you first run the app, macOS will ask for camera permissions - grant access to enable the mirror functionality
-2. The application will launch with a maximized translucent window showing your camera feed (mirrored)
-3. Use the opacity slider in the bottom-right corner to adjust transparency
-4. The window allows you to see through to whatever applications or content are behind it
-5. You can move other windows behind the mirror app to see them through the translucent overlay
+1. **Launch**: Run the app - it appears as a menu bar item (mirror icon) in the top-right corner
+2. **Permissions**: Grant camera access when prompted by macOS
+3. **Mirror Control**: Click the menu bar item to access:
+   - **Turn On/Off Mirror**: Toggle the mirror overlay
+   - **Opacity Slider**: Adjust transparency (10% - 100%)
+   - **Quit**: Exit the application
+4. **Seamless Operation**: The mirror overlay is completely click-through - use your computer normally
+5. **Always Available**: The mirror stays on top but never interferes with your workflow
 
 ## Privacy
 
