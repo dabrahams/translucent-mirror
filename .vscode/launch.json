@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mirror}",
+            "name": "Debug mirror",
+            "program": "${workspaceFolder:mirror}/.build/debug/mirror",
+            "preLaunchTask": "swift: Build Debug mirror"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:mirror}",
+            "name": "Release mirror",
+            "program": "${workspaceFolder:mirror}/.build/release/mirror",
+            "preLaunchTask": "swift: Build Release mirror"
+        }
+    ]
+}
