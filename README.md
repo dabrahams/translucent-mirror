@@ -34,10 +34,18 @@ A SwiftUI application that creates a translucent mirror using your Mac's camera.
 2. **Permissions**: Grant camera access when prompted by macOS
 3. **Mirror Control**: Click the menu bar item to access:
    - **Turn On/Off Mirror**: Toggle the mirror overlay
+   - **Unlock/Lock Position & Size**: Switch between adjustable and locked modes
    - **Opacity Slider**: Adjust transparency (10% - 100%)
    - **Quit**: Exit the application
-4. **Seamless Operation**: The mirror overlay is completely click-through - use your computer normally
-5. **Always Available**: The mirror stays on top but never interferes with your workflow
+4. **Two Modes**:
+   - **Locked Mode** (default): Mirror is click-through, always on top, covers primary display initially
+   - **Adjustable Mode**: Mirror becomes a normal resizable window that you can move and resize
+   - **Frame Memory**: Locked mode remembers the window position/size from adjustable mode
+5. **Workflow Examples**:
+   - Start with full-screen mirror → Unlock → Resize to corner → Lock → Mirror covers just that area
+   - To reset: Unlock → Maximize window → Lock → Returns to full primary display coverage
+6. **Seamless Operation**: In locked mode, the mirror overlay is completely click-through
+7. **Always Available**: Easy access via menu bar without cluttering your dock
 
 ## Privacy
 

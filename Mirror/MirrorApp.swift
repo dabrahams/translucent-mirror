@@ -53,6 +53,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         
         menu.addItem(NSMenuItem.separator())
         
+        // Adjustable mode toggle
+        let adjustableItem = NSMenuItem(title: mirrorController.isAdjustable ? "Lock Position & Size" : "Unlock Position & Size", 
+                                       action: #selector(toggleAdjustableMode), 
+                                       keyEquivalent: "")
+        adjustableItem.target = self
+        menu.addItem(adjustableItem)
+        
+        menu.addItem(NSMenuItem.separator())
+        
         // Opacity slider menu item
         let opacityMenuItem = NSMenuItem()
         opacityMenuItem.title = "Opacity"
@@ -78,10 +87,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         mirrorController.onStateChange = { [weak self] in
             self?.updateStatusBarMenu()
         }
+        
+        // Update menu when adjustable mode changes
+        mirrorController.onModeChange = { [weak self] in
+            self?.updateStatusBarMenu()
+        }
     }
     
     @objc private func toggleMirror() {
         mirrorController.toggle()
+    }
+    
+    @objc private func toggleAdjustableMode() {
+        mirrorController.toggleAdjustableMode()
     }
     
     private func updateStatusBarMenu() {
@@ -89,17 +107,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         if let toggleItem = menu.item(at: 0) {
             toggleItem.title = mirrorController.isEnabled ? "Turn Off Mirror" : "Turn On Mirror"
         }
+        if let adjustableItem = menu.item(at: 2) { // Item at index 2 (after separator)
+            adjustableItem.title = mirrorController.isAdjustable ? "Lock Position & Size" : "Unlock Position & Size"
+        }
     }
 }
 
 class MirrorController: ObservableObject {
     @Published var isEnabled: Bool = true
     @Published var opacity: Double = 0.7
+    @Published var isAdjustable: Bool = false
     var onStateChange: (() -> Void)?
+    var onModeChange: (() -> Void)?
+    
+    // Store the desired locked mode frame (starts as full primary screen)
+    var lockedModeFrame: NSRect = {
+        return NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
+    }()
     
     func toggle() {
         isEnabled.toggle()
         onStateChange?()
+    }
+    
+    func toggleAdjustableMode() {
+        isAdjustable.toggle()
+        onModeChange?()
     }
 }
 
@@ -147,34 +180,66 @@ struct ContentView: View {
         .onDisappear {
             cameraManager.stopSession()
         }
+        .onChange(of: mirrorController.isAdjustable) { _ in
+            DispatchQueue.main.async {
+                if let window = NSApplication.shared.windows.first {
+                    self.configureWindowForCurrentMode(window)
+                }
+            }
+        }
     }
     
     private func setupWindow() {
         DispatchQueue.main.async {
             if let window = NSApplication.shared.windows.first {
-                // Make window translucent and click-through
-                window.isOpaque = false
-                window.backgroundColor = NSColor.clear
-                window.hasShadow = false
-                
-                // Make window ignore mouse events (click-through)
-                window.ignoresMouseEvents = true
-                
-                // Always on top
-                window.level = .floating
-                
-                // Maximize window to cover entire screen
-                if let screen = NSScreen.main {
-                    let screenFrame = screen.frame // Use full screen frame, not visibleFrame
-                    window.setFrame(screenFrame, display: true)
-                }
-                
-                // Allow window to appear on all spaces and stay on top
-                window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
-                
-                // Remove window from window list (Cmd+Tab, Mission Control, etc.)
-                window.isExcludedFromWindowsMenu = true
+                self.configureWindowForCurrentMode(window)
             }
+        }
+    }
+    
+    private func configureWindowForCurrentMode(_ window: NSWindow) {
+        print("Configuring window for mode: \(mirrorController.isAdjustable ? "adjustable" : "locked")")
+        
+        // Basic translucent properties always apply
+        window.isOpaque = false
+        window.backgroundColor = NSColor.clear
+        window.hasShadow = mirrorController.isAdjustable // Show shadow only in adjustable mode
+        
+        if mirrorController.isAdjustable {
+            // Adjustable mode: resizable, draggable, visible frame
+            window.ignoresMouseEvents = false
+            window.level = .normal
+            window.styleMask = [.titled, .resizable, .closable, .miniaturizable]
+            window.title = "Translucent Mirror"
+            window.isMovable = true
+            window.collectionBehavior = [.canJoinAllSpaces]
+            window.isExcludedFromWindowsMenu = false
+            
+            // Set window to the stored locked mode frame (so user can adjust it)
+            window.setFrame(mirrorController.lockedModeFrame, display: true)
+            
+            // Make sure window is visible and ordered front
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+        } else {
+            // Store the current window frame before switching to locked mode
+            mirrorController.lockedModeFrame = window.frame
+            print("Stored frame for locked mode: \(mirrorController.lockedModeFrame)")
+            
+            // Locked mode: click-through, always on top, use stored frame
+            window.ignoresMouseEvents = true
+            window.level = .floating
+            window.styleMask = [.borderless]
+            window.isMovable = false
+            window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+            window.isExcludedFromWindowsMenu = true
+            
+            // Use the stored frame (which was just updated above)
+            window.setFrame(mirrorController.lockedModeFrame, display: true)
+            print("Set locked mode frame: \(mirrorController.lockedModeFrame)")
+            
+            // Ensure window remains visible in locked mode too
+            window.orderFrontRegardless()
         }
     }
 }
@@ -202,58 +267,74 @@ class CameraManager: NSObject, ObservableObject {
     private let captureSession = AVCaptureSession()
     let previewLayer: AVCaptureVideoPreviewLayer
     private var videoDeviceInput: AVCaptureDeviceInput?
+    private var isConfigured = false
+    private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     
     override init() {
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         previewLayer.videoGravity = .resizeAspectFill
         super.init()
+        configureSession()
     }
     
     func startSession() {
-        guard !captureSession.isRunning else { return }
-        
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.configureSession()
-            self?.captureSession.startRunning()
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            
+            if !self.captureSession.isRunning && self.isConfigured {
+                self.captureSession.startRunning()
+            }
         }
     }
     
     func stopSession() {
-        guard captureSession.isRunning else { return }
-        
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.captureSession.stopRunning()
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            
+            if self.captureSession.isRunning {
+                self.captureSession.stopRunning()
+            }
         }
     }
     
     private func configureSession() {
-        captureSession.beginConfiguration()
-        
-        // Configure session preset
-        if captureSession.canSetSessionPreset(.high) {
-            captureSession.sessionPreset = .high
-        }
-        
-        // Add video input
-        guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) ?? AVCaptureDevice.default(for: .video) else {
-            print("Failed to get video device")
-            captureSession.commitConfiguration()
-            return
-        }
-        
-        do {
-            let videoDeviceInput = try AVCaptureDeviceInput(device: videoDevice)
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
             
-            if captureSession.canAddInput(videoDeviceInput) {
-                captureSession.addInput(videoDeviceInput)
-                self.videoDeviceInput = videoDeviceInput
-            } else {
-                print("Couldn't add video device input to the session")
+            // Don't configure if already configured
+            if self.isConfigured {
+                return
             }
-        } catch {
-            print("Couldn't create video device input: \(error)")
+            
+            self.captureSession.beginConfiguration()
+            
+            // Configure session preset
+            if self.captureSession.canSetSessionPreset(.high) {
+                self.captureSession.sessionPreset = .high
+            }
+            
+            // Add video input
+            guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) ?? AVCaptureDevice.default(for: .video) else {
+                print("Failed to get video device")
+                self.captureSession.commitConfiguration()
+                return
+            }
+            
+            do {
+                let videoDeviceInput = try AVCaptureDeviceInput(device: videoDevice)
+                
+                if self.captureSession.canAddInput(videoDeviceInput) {
+                    self.captureSession.addInput(videoDeviceInput)
+                    self.videoDeviceInput = videoDeviceInput
+                } else {
+                    print("Couldn't add video device input to the session")
+                }
+            } catch {
+                print("Couldn't create video device input: \(error)")
+            }
+            
+            self.captureSession.commitConfiguration()
+            self.isConfigured = true
         }
-        
-        captureSession.commitConfiguration()
     }
 }
