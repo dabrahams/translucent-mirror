@@ -12,7 +12,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1D4A2C262C8B1F0000A1B2C3 /* Mirror.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mirror.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D4A2C262C8B1F0000A1B2C3 /* Translucent Mirror.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Translucent Mirror.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D4A2C292C8B1F0000A1B2C3 /* MirrorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorApp.swift; sourceTree = "<group>"; };
 		1D4A2C2B2C8B1F0200A1B2C3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1D4A2C302C8B1F0200A1B2C3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -41,7 +41,7 @@
 		1D4A2C272C8B1F0000A1B2C3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1D4A2C262C8B1F0000A1B2C3 /* Mirror.app */,
+				1D4A2C262C8B1F0000A1B2C3 /* Translucent Mirror.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -74,7 +74,7 @@
 			);
 			name = Mirror;
 			productName = Mirror;
-			productReference = 1D4A2C262C8B1F0000A1B2C3 /* Mirror.app */;
+			productReference = 1D4A2C262C8B1F0000A1B2C3 /* Translucent Mirror.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -168,6 +168,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = com.luannocracy.coders;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -231,6 +232,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = com.luannocracy.coders;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
