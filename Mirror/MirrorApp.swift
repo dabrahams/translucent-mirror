@@ -181,7 +181,8 @@ struct ContentView: View {
             cameraManager.stopSession()
         }
         .onChange(of: mirrorController.isAdjustable) { _ in
-            DispatchQueue.main.async {
+            // Delay the window configuration to avoid layout recursion
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 if let window = NSApplication.shared.windows.first {
                     self.configureWindowForCurrentMode(window)
                 }
@@ -190,7 +191,8 @@ struct ContentView: View {
     }
     
     private func setupWindow() {
-        DispatchQueue.main.async {
+        // Delay initial setup to ensure SwiftUI layout is complete
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             if let window = NSApplication.shared.windows.first {
                 self.configureWindowForCurrentMode(window)
             }
@@ -199,6 +201,12 @@ struct ContentView: View {
     
     private func configureWindowForCurrentMode(_ window: NSWindow) {
         print("Configuring window for mode: \(mirrorController.isAdjustable ? "adjustable" : "locked")")
+        
+        // Prevent configuration during layout operations
+        guard !window.inLiveResize else {
+            print("Skipping configuration during live resize")
+            return
+        }
         
         // Basic translucent properties always apply
         window.isOpaque = false
