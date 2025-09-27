@@ -122,7 +122,7 @@ class MirrorController: ObservableObject {
     
     // Store the desired locked mode frame (starts as full primary screen)
     var lockedModeFrame: NSRect = {
-        return NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
+        return NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 100, height: 100)
     }()
     
     func toggle() {
