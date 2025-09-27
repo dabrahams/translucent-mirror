@@ -50,23 +50,3 @@ A SwiftUI application that creates a translucent mirror using your Mac's camera.
 ## Privacy
 
 This application only accesses your camera to display the mirror view locally on your Mac. No video data is transmitted, stored, or shared.
-
-## App Store Ready
-
-This project is now configured for Mac App Store distribution with:
-
-- ✅ Proper Xcode project structure
-- ✅ App icon set (all required sizes)
-- ✅ Info.plist with required metadata
-- ✅ Entitlements for camera access and sandboxing
-- ✅ Bundle identifier: `com.translucentmirror.app`
-- ✅ App category: Utilities
-- ✅ macOS 13.0+ deployment target
-
-### Building for App Store
-
-1. Open `Mirror.xcodeproj` in Xcode
-2. Set your development team in the project settings
-3. Archive the project (Product → Archive)
-4. Upload to App Store Connect
-
